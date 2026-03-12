@@ -38,7 +38,7 @@ impl Welcome {
         CollapsingHeader::new(i18n("Settings"))
             .default_open(true)
             .show(ui, |ui| {
-                CollapsingHeader::new(i18n("Kaspa Network"))
+                CollapsingHeader::new(i18n("BunkerNet Network"))
                     .default_open(true)
                     .show(ui, |ui| {
 
@@ -57,7 +57,7 @@ impl Welcome {
                             }
                         });
                 
-                CollapsingHeader::new(i18n("Kaspa p2p Node & Connection"))
+                CollapsingHeader::new(i18n("BunkerNet p2p Node & Connection"))
                     .default_open(true)
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
@@ -180,7 +180,7 @@ impl Welcome {
             ui.add_space(32.0);
             // ui.colored_label(theme_color().alert_color, "Please note - this is a beta release - BunkerNet NG is still in early development and is not yet ready for production use.");
             // ui.add_space(32.0);
-            ui.label(format!("BunkerNet NG v{}  •  Rusty Kaspa v{}", env!("CARGO_PKG_VERSION"), bunkernet_wallet_core::version()));
+            ui.label(format!("BunkerNet NG v{}  •  Rusty BunkerNet v{}", env!("CARGO_PKG_VERSION"), bunkernet_wallet_core::version()));
             ui.hyperlink_to(
                 "https://kaspa.org",
                 "https://kaspa.org",
@@ -199,7 +199,7 @@ impl Welcome {
         Panel::new(self)
             .with_caption(i18n("Welcome to BunkerNet NG"))
             .with_header(|_this, ui| {
-                ui.label(i18n("Please select Kaspa network"));
+                ui.label(i18n("Please select BunkerNet network"));
             })
             .with_body(|this, ui| {
                 Network::iter().for_each(|network| {

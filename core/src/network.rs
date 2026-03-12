@@ -140,7 +140,7 @@ impl Network {
 
     pub fn describe(&self) -> &str {
         match self {
-            Network::Mainnet => i18n("Main Kaspa network"),
+            Network::Mainnet => i18n("Main BunkerNet network"),
             Network::Testnet10 => i18n("10 BPS test network"),
         }
     }

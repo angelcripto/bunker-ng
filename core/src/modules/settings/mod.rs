@@ -150,12 +150,12 @@ impl Settings {
 
         let mut node_settings_error = None;
 
-        CollapsingHeader::new(i18n("Kaspa p2p Network & Node Connection"))
+        CollapsingHeader::new(i18n("BunkerNet p2p Network & Node Connection"))
             .default_open(true)
             .show(ui, |ui| {
 
 
-                CollapsingHeader::new(i18n("Kaspa Network"))
+                CollapsingHeader::new(i18n("BunkerNet Network"))
                     .default_open(true)
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui|{
@@ -166,7 +166,7 @@ impl Settings {
                     });
 
 
-                CollapsingHeader::new(i18n("Kaspa Node"))
+                CollapsingHeader::new(i18n("BunkerNet Node"))
                     .default_open(true)
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui|{
@@ -197,17 +197,17 @@ impl Settings {
                             BunkerdNodeKind::ExternalAsDaemon => {
 
                                 ui.horizontal(|ui|{
-                                    ui.label(i18n("Rusty Kaspa Daemon Path:"));
+                                    ui.label(i18n("Rusty BunkerNet Daemon Path:"));
                                     ui.add(TextEdit::singleline(&mut self.settings.node.bunkerd_daemon_binary));
                                 });
 
                                 let path = std::path::PathBuf::from(&self.settings.node.bunkerd_daemon_binary);
                                 if path.exists() && !path.is_file() {
                                     ui.label(
-                                        RichText::new(format!("Rusty Kaspa Daemon not found at '{path}'", path = self.settings.node.bunkerd_daemon_binary))
+                                        RichText::new(format!("Rusty BunkerNet Daemon not found at '{path}'", path = self.settings.node.bunkerd_daemon_binary))
                                             .color(theme_color().error_color),
                                     );
-                                    node_settings_error = Some("Rusty Kaspa Daemon not found");
+                                    node_settings_error = Some("Rusty BunkerNet Daemon not found");
                                 }
                             },
                             _ => { }
@@ -386,7 +386,7 @@ impl Settings {
                         });
                 } // is_config_capable
 
-            }); // Kaspa p2p Network & Node Connection
+            }); // BunkerNet p2p Network & Node Connection
 
             if let Some(error) = node_settings_error {
                 ui.add_space(4.);
@@ -671,7 +671,7 @@ impl Settings {
                             &mut self.settings.developer.enable_custom_daemon_args, 
                             i18n("Enable custom daemon arguments")
                         ).on_hover_text_at_pointer(
-                            i18n("Allow custom arguments for the Rusty Kaspa daemon")
+                            i18n("Allow custom arguments for the Rusty BunkerNet daemon")
                         );
                         
                         ui.checkbox(

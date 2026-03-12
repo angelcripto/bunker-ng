@@ -244,7 +244,7 @@ impl ModuleT for Metrics {
                     ui.add_space(64.);
                     ui.add(egui::Spinner::new().size(92.));
                 } else {
-                    ui.label(i18n("Please connect to Kaspa p2p node"));
+                    ui.label(i18n("Please connect to BunkerNet p2p node"));
                 }
 
             });

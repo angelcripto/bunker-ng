@@ -91,7 +91,7 @@ impl Overview {
             "".to_string()
         };
 
-        CollapsingHeader::new(format!("{}{}",i18n("Kaspa p2p Node"), node_info))
+        CollapsingHeader::new(format!("{}{}",i18n("BunkerNet p2p Node"), node_info))
             .default_open(true)
             .show(ui, |ui| {
 
@@ -278,11 +278,11 @@ impl Overview {
                             "https://github.com/aspectron/bunker-ng"
                         );
                         ui.hyperlink_to_tab(
-                            format!("• {}",i18n("Rusty Kaspa on GitHub")),
+                            format!("• {}",i18n("Rusty BunkerNet on GitHub")),
                             "https://github.com/kaspanet/rusty-bunkernet",
                         );
                         ui.hyperlink_to_tab(
-                            format!("• {}",i18n("Kaspa Integration Guide")),
+                            format!("• {}",i18n("BunkerNet Integration Guide")),
                             "https://kaspa.aspectron.org",
                         );
                         ui.hyperlink_to_tab(
@@ -345,8 +345,8 @@ impl Overview {
                 CollapsingHeader::new(i18n("Build"))
                     .default_open(true)
                     .show(ui, |ui| {
-                        ui.add(Label::new(format!("BunkerNet NG v{}-{} + Rusty Kaspa {}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, bunkernet_version())));
-                        // if ui.add(Label::new(format!("BunkerNet NG v{}-{} + Rusty Kaspa v{}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, bunkernet_wallet_core::version())).sense(Sense::click())).clicked() {
+                        ui.add(Label::new(format!("BunkerNet NG v{}-{} + Rusty BunkerNet {}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, bunkernet_version())));
+                        // if ui.add(Label::new(format!("BunkerNet NG v{}-{} + Rusty BunkerNet v{}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, bunkernet_wallet_core::version())).sense(Sense::click())).clicked() {
                         //     core.select::<modules::Changelog>();
                         // }
                         // ui.label(format!("Timestamp: {}", crate::app::BUILD_TIMESTAMP));
@@ -371,8 +371,8 @@ impl Overview {
                     .default_open(false)
                     .show(ui, |ui| {
                         ui.vertical(|ui|{
-                            ui.label("Rusty Kaspa");
-                            ui.label("Copyright (c) 2024 Kaspa Developers");
+                            ui.label("Rusty BunkerNet");
+                            ui.label("Copyright (c) 2024 BunkerNet Developers");
                             ui.label("License: ISC");
                             ui.hyperlink_url_to_tab("https://github.com/kaspanet/rusty-bunkernet");
                             ui.label("");

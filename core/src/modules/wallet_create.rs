@@ -548,7 +548,7 @@ impl ModuleT for WalletCreate {
                             your wallet, you may be accessing a fake wallet designed to steal \
                             your funds. If this occurs, stop using the wallet immediately, \
                             check the browser URL domain name and seek help on social networks \
-                            (Kaspa Discord or Telegram)."));
+                            (BunkerNet Discord or Telegram)."));
                         ui.label(" ");
                     })
                     .with_body(|this,ui| {

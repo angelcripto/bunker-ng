@@ -75,13 +75,13 @@ impl BunkerdNodeKind {
     pub fn describe(&self) -> &str {
         match self {
             BunkerdNodeKind::Disable => i18n("Disables node connectivity (Offline Mode)."),
-            BunkerdNodeKind::Remote => i18n("Connects to a Remote Rusty Kaspa Node via wRPC."),
+            BunkerdNodeKind::Remote => i18n("Connects to a Remote Rusty BunkerNet Node via wRPC."),
             #[cfg(not(target_arch = "wasm32"))]
-            BunkerdNodeKind::IntegratedInProc => i18n("The node runs as a part of the Kaspa-NG application process. This reduces communication overhead (experimental)."),
+            BunkerdNodeKind::IntegratedInProc => i18n("The node runs as a part of the BunkerNet-NG application process. This reduces communication overhead (experimental)."),
             #[cfg(not(target_arch = "wasm32"))]
             BunkerdNodeKind::IntegratedAsDaemon => i18n("The node is spawned as a child daemon process (recommended)."),
             #[cfg(not(target_arch = "wasm32"))]
-            BunkerdNodeKind::IntegratedAsPassiveSync => i18n("The node synchronizes in the background while Kaspa-NG is connected to a public node. Once the node is synchronized, you can switch to the 'Integrated Daemon' mode."),
+            BunkerdNodeKind::IntegratedAsPassiveSync => i18n("The node synchronizes in the background while BunkerNet-NG is connected to a public node. Once the node is synchronized, you can switch to the 'Integrated Daemon' mode."),
             #[cfg(not(target_arch = "wasm32"))]
             BunkerdNodeKind::ExternalAsDaemon => i18n("A binary at another location is spawned a child process (experimental, for development purposes only)."),
         }
@@ -292,7 +292,7 @@ impl std::fmt::Display for NodeMemoryScale {
 impl NodeMemoryScale {
     pub fn describe(&self) -> &str {
         match self {
-            NodeMemoryScale::Default => i18n("Managed by the Rusty Kaspa daemon"),
+            NodeMemoryScale::Default => i18n("Managed by the Rusty BunkerNet daemon"),
             NodeMemoryScale::Conservative => i18n("Use 50%-75% of available system memory"),
             NodeMemoryScale::Performance => i18n("Use all available system memory"),
         }
