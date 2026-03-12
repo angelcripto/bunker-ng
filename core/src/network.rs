@@ -1,7 +1,7 @@
 use crate::imports::*;
-use kaspa_addresses::Prefix as AddressPrefix;
-use kaspa_consensus_core::config::params::Params;
-use kaspa_wallet_core::utxo::NetworkParams;
+use bunkernet_addresses::Prefix as AddressPrefix;
+use bunkernet_consensus_core::config::params::Params;
+use bunkernet_wallet_core::utxo::NetworkParams;
 
 pub const BASIC_TRANSACTION_MASS: u64 = 2036;
 
@@ -148,7 +148,7 @@ impl Network {
     pub fn tps(&self) -> u64 {
         let params = Params::from(*self);
         // TODO: use DAA score to determine the correct BPS value
-        params.max_block_mass / BASIC_TRANSACTION_MASS * params.bps().after()
+        params.max_block_mass / BASIC_TRANSACTION_MASS * params.bps()
     }
 }
 

@@ -1,13 +1,13 @@
 use crate::imports::*;
 use crate::runtime::Service;
 pub use futures::{future::FutureExt, select, Future};
-use kaspa_wallet_core::api::*;
-use kaspa_wallet_core::events::Events as CoreWalletEvents;
+use bunkernet_wallet_core::api::*;
+use bunkernet_wallet_core::events::Events as CoreWalletEvents;
 #[allow(unused_imports)]
-use kaspa_wallet_core::rpc::{
+use bunkernet_wallet_core::rpc::{
     ConnectOptions, ConnectStrategy, NotificationMode, Rpc, RpcCtl, WrpcEncoding,
 };
-use kaspa_wrpc_client::Resolver;
+use bunkernet_wrpc_client::Resolver;
 use workflow_core::runtime;
 
 const ENABLE_PREEMPTIVE_DISCONNECT: bool = true;
@@ -15,7 +15,7 @@ const ENABLE_PREEMPTIVE_DISCONNECT: bool = true;
 cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
         #[cfg(not(target_arch = "wasm32"))]
-        use kaspa_rpc_service::service::RpcCoreService;
+        use bunkernet_rpc_service::service::RpcCoreService;
 
         const LOG_BUFFER_LINES: usize = 4096;
         const LOG_BUFFER_MARGIN: usize = 128;
@@ -32,16 +32,16 @@ cfg_if! {
         pub mod inproc;
         pub mod logs;
         use logs::Log;
-        pub use kaspad_lib::args::Args;
+        pub use bunkerd_lib::args::Args;
 
         #[async_trait]
-        pub trait Kaspad {
+        pub trait Bunkerd {
             async fn start(self : Arc<Self>, config : Config) -> Result<()>;
             async fn stop(self : Arc<Self>) -> Result<()>;
         }
 
         #[derive(Debug, Clone)]
-        pub enum KaspadServiceEvents {
+        pub enum BunkerdServiceEvents {
             StartInternalInProc { config: Config, network : Network },
             StartInternalAsDaemon { config: Config, network : Network },
             StartInternalAsPassiveSync { config: Config, network : Network },
@@ -65,7 +65,7 @@ cfg_if! {
     } else {
 
         #[derive(Debug)]
-        pub enum KaspadServiceEvents {
+        pub enum BunkerdServiceEvents {
             StartRemoteConnection { rpc_config : RpcConfig, network : Network },
             Disable { network : Network },
             Exit,
@@ -77,21 +77,21 @@ cfg_if! {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub struct Context {}
 
-pub struct KaspaService {
+pub struct BunkerNetService {
     pub application_events: ApplicationEventsChannel,
-    pub service_events: Channel<KaspadServiceEvents>,
+    pub service_events: Channel<BunkerdServiceEvents>,
     pub task_ctl: Channel<()>,
     pub network: Mutex<Network>,
     pub wallet: Arc<dyn WalletApi>,
     pub services_start_instant: Mutex<Option<Instant>>,
     #[cfg(not(target_arch = "wasm32"))]
-    pub kaspad: Mutex<Option<Arc<dyn Kaspad + Send + Sync + 'static>>>,
+    pub bunkerd: Mutex<Option<Arc<dyn Bunkerd + Send + Sync + 'static>>>,
     #[cfg(not(target_arch = "wasm32"))]
     pub logs: Mutex<Vec<Log>>,
     pub connect_on_startup: Option<NodeSettings>,
 }
 
-impl KaspaService {
+impl BunkerNetService {
     pub fn new(
         application_events: ApplicationEventsChannel,
         settings: &Settings,
@@ -116,7 +116,7 @@ impl KaspaService {
         let service_events = Channel::unbounded();
 
         if !settings.initialized {
-            log_warn!("KaspaService::new(): Settings are not initialized");
+            log_warn!("BunkerNetService::new(): Settings are not initialized");
         }
 
         Self {
@@ -128,33 +128,33 @@ impl KaspaService {
             wallet,
             services_start_instant: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
-            kaspad: Mutex::new(None),
+            bunkerd: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
             logs: Mutex::new(Vec::new()),
         }
     }
 
     pub async fn apply_node_settings(&self, node_settings: &NodeSettings) -> Result<()> {
-        match KaspadServiceEvents::from_node_settings(node_settings, None) {
+        match BunkerdServiceEvents::from_node_settings(node_settings, None) {
             Ok(event) => {
-                // log_trace!("KaspaService::new(): emitting startup event: {:?}", event);
+                // log_trace!("BunkerNetService::new(): emitting startup event: {:?}", event);
                 self.service_events
                     .sender
                     .try_send(event)
                     .unwrap_or_else(|err| {
-                        log_error!("KaspadService error: {}", err);
+                        log_error!("BunkerdService error: {}", err);
                     });
             }
             Err(err) => {
-                log_error!("KaspadServiceEvents::try_from() error: {}", err);
+                log_error!("BunkerdServiceEvents::try_from() error: {}", err);
             }
         }
         Ok(())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn retain(&self, kaspad: Arc<dyn Kaspad + Send + Sync + 'static>) {
-        self.kaspad.lock().unwrap().replace(kaspad);
+    pub fn retain(&self, bunkerd: Arc<dyn Bunkerd + Send + Sync + 'static>) {
+        self.bunkerd.lock().unwrap().replace(bunkerd);
     }
 
     pub fn create_rpc_client(config: &RpcConfig, network: Network) -> Result<Rpc> {
@@ -177,9 +177,9 @@ impl KaspaService {
 
                 let url = url.clone().unwrap_or_else(|| "127.0.0.1".to_string());
                 let url =
-                    KaspaRpcClient::parse_url(url, *encoding, NetworkId::from(network).into())?;
+                    BunkernetRpcClient::parse_url(url, *encoding, NetworkId::from(network).into())?;
 
-                let wrpc_client = Arc::new(KaspaRpcClient::new_with_args(
+                let wrpc_client = Arc::new(BunkernetRpcClient::new_with_args(
                     *encoding,
                     if resolver_or_none.is_some() {
                         None
@@ -202,7 +202,7 @@ impl KaspaService {
 
     pub async fn connect_rpc_client(&self) -> Result<()> {
         if let Some(wallet) = self.core_wallet() {
-            if let Ok(wrpc_client) = wallet.rpc_api().clone().downcast_arc::<KaspaRpcClient>() {
+            if let Ok(wrpc_client) = wallet.rpc_api().clone().downcast_arc::<BunkernetRpcClient>() {
                 let options = ConnectOptions {
                     block_async_connect: false,
                     strategy: ConnectStrategy::Retry,
@@ -267,7 +267,7 @@ impl KaspaService {
             if !wallet.has_rpc() {
                 None
             } else if let Ok(wrpc_client) =
-                wallet.rpc_api().clone().downcast_arc::<KaspaRpcClient>()
+                wallet.rpc_api().clone().downcast_arc::<BunkernetRpcClient>()
             {
                 wrpc_client.url()
             } else {
@@ -284,7 +284,7 @@ impl KaspaService {
                 && wallet
                     .rpc_api()
                     .clone()
-                    .downcast_arc::<KaspaRpcClient>()
+                    .downcast_arc::<BunkernetRpcClient>()
                     .is_ok()
         } else {
             false
@@ -293,7 +293,7 @@ impl KaspaService {
 
     async fn disconnect_rpc(&self) -> Result<()> {
         if let Some(wallet) = self.core_wallet() {
-            if let Ok(wrpc_client) = wallet.rpc_api().clone().downcast_arc::<KaspaRpcClient>() {
+            if let Ok(wrpc_client) = wallet.rpc_api().clone().downcast_arc::<BunkernetRpcClient>() {
                 wrpc_client.disconnect().await?;
             } else {
                 wallet.rpc_ctl().signal_close().await?;
@@ -337,10 +337,10 @@ impl KaspaService {
 
             #[cfg(not(target_arch = "wasm32"))]
             {
-                let kaspad = self.kaspad.lock().unwrap().take();
-                if let Some(kaspad) = kaspad {
-                    if let Err(err) = kaspad.stop().await {
-                        println!("error shutting down kaspad: {}", err);
+                let bunkerd = self.bunkerd.lock().unwrap().take();
+                if let Some(bunkerd) = bunkerd {
+                    if let Err(err) = bunkerd.stop().await {
+                        println!("error shutting down bunkerd: {}", err);
                     }
                 }
             }
@@ -396,17 +396,17 @@ impl KaspaService {
     }
 
     pub fn update_services(&self, node_settings: &NodeSettings, options: Option<RpcOptions>) {
-        match KaspadServiceEvents::from_node_settings(node_settings, options) {
+        match BunkerdServiceEvents::from_node_settings(node_settings, options) {
             Ok(event) => {
                 self.service_events
                     .sender
                     .try_send(event)
                     .unwrap_or_else(|err| {
-                        println!("KaspadService error: {}", err);
+                        println!("BunkerdService error: {}", err);
                     });
             }
             Err(err) => {
-                println!("KaspadServiceEvents::try_from() error: {}", err);
+                println!("BunkerdServiceEvents::try_from() error: {}", err);
             }
         }
     }
@@ -452,10 +452,10 @@ impl KaspaService {
         runtime().update_storage(options);
     }
 
-    async fn handle_event(self: &Arc<Self>, event: KaspadServiceEvents) -> Result<bool> {
+    async fn handle_event(self: &Arc<Self>, event: BunkerdServiceEvents) -> Result<bool> {
         match event {
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadServiceEvents::Stdout { line } => {
+            BunkerdServiceEvents::Stdout { line } => {
                 let wallet = self.core_wallet().ok_or(Error::WalletIsNotLocal)?;
                 if !wallet.utxo_processor().is_synced() {
                     wallet
@@ -469,17 +469,17 @@ impl KaspaService {
             }
 
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadServiceEvents::StartInternalInProc { config, network } => {
+            BunkerdServiceEvents::StartInternalInProc { config, network } => {
                 self.stop_all_services().await?;
 
                 self.handle_network_change(network).await?;
 
-                let kaspad = Arc::new(inproc::InProc::default());
-                self.retain(kaspad.clone());
+                let bunkerd = Arc::new(inproc::InProc::default());
+                self.retain(bunkerd.clone());
 
-                kaspad.clone().start(config).await.unwrap();
+                bunkerd.clone().start(config).await.unwrap();
 
-                let rpc_api = kaspad
+                let rpc_api = bunkerd
                     .rpc_core_services()
                     .expect("Unable to obtain inproc rpc api");
                 let rpc_ctl = RpcCtl::new();
@@ -491,14 +491,14 @@ impl KaspaService {
                 self.update_storage();
             }
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadServiceEvents::StartInternalAsDaemon { config, network } => {
+            BunkerdServiceEvents::StartInternalAsDaemon { config, network } => {
                 self.stop_all_services().await?;
 
                 self.handle_network_change(network).await?;
 
-                let kaspad = Arc::new(daemon::Daemon::new(None, &self.service_events));
-                self.retain(kaspad.clone());
-                kaspad.clone().start(config).await.unwrap();
+                let bunkerd = Arc::new(daemon::Daemon::new(None, &self.service_events));
+                self.retain(bunkerd.clone());
+                bunkerd.clone().start(config).await.unwrap();
 
                 let rpc_config = RpcConfig::Wrpc {
                     url: Some("127.0.0.1".to_string()),
@@ -507,21 +507,21 @@ impl KaspaService {
                 };
 
                 let rpc = Self::create_rpc_client(&rpc_config, network)
-                    .expect("Kaspad Service - unable to create wRPC client");
+                    .expect("Bunkerd Service - unable to create wRPC client");
                 self.start_all_services(Some(rpc), network).await?;
                 self.connect_rpc_client().await?;
 
                 self.update_storage();
             }
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadServiceEvents::StartInternalAsPassiveSync { config, network } => {
+            BunkerdServiceEvents::StartInternalAsPassiveSync { config, network } => {
                 self.stop_all_services().await?;
 
                 self.handle_network_change(network).await?;
 
-                let kaspad = Arc::new(daemon::Daemon::new(None, &self.service_events));
-                self.retain(kaspad.clone());
-                kaspad.clone().start(config).await.unwrap();
+                let bunkerd = Arc::new(daemon::Daemon::new(None, &self.service_events));
+                self.retain(bunkerd.clone());
+                bunkerd.clone().start(config).await.unwrap();
 
                 let rpc_config = RpcConfig::Wrpc {
                     url: None,
@@ -530,14 +530,14 @@ impl KaspaService {
                 };
 
                 let rpc = Self::create_rpc_client(&rpc_config, network)
-                    .expect("Kaspad Service - unable to create wRPC client");
+                    .expect("Bunkerd Service - unable to create wRPC client");
                 self.start_all_services(Some(rpc), network).await?;
                 self.connect_rpc_client().await?;
 
                 self.update_storage();
             }
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadServiceEvents::StartExternalAsDaemon {
+            BunkerdServiceEvents::StartExternalAsDaemon {
                 path,
                 config,
                 network,
@@ -546,10 +546,10 @@ impl KaspaService {
 
                 self.handle_network_change(network).await?;
 
-                let kaspad = Arc::new(daemon::Daemon::new(Some(path), &self.service_events));
-                self.retain(kaspad.clone());
+                let bunkerd = Arc::new(daemon::Daemon::new(Some(path), &self.service_events));
+                self.retain(bunkerd.clone());
 
-                kaspad.clone().start(config).await.unwrap();
+                bunkerd.clone().start(config).await.unwrap();
 
                 let rpc_config = RpcConfig::Wrpc {
                     url: None,
@@ -558,13 +558,13 @@ impl KaspaService {
                 };
 
                 let rpc = Self::create_rpc_client(&rpc_config, network)
-                    .expect("Kaspad Service - unable to create wRPC client");
+                    .expect("Bunkerd Service - unable to create wRPC client");
                 self.start_all_services(Some(rpc), network).await?;
                 self.connect_rpc_client().await?;
 
                 self.update_storage();
             }
-            KaspadServiceEvents::StartRemoteConnection {
+            BunkerdServiceEvents::StartRemoteConnection {
                 rpc_config,
                 network,
             } => {
@@ -582,13 +582,13 @@ impl KaspaService {
                     self.handle_network_change(network).await?;
 
                     let rpc = Self::create_rpc_client(&rpc_config, network)
-                        .expect("Kaspad Service - unable to create wRPC client");
+                        .expect("Bunkerd Service - unable to create wRPC client");
                     self.start_all_services(Some(rpc), network).await?;
                     self.connect_rpc_client().await?;
                 }
             }
 
-            KaspadServiceEvents::Disable { network } => {
+            BunkerdServiceEvents::Disable { network } => {
                 if let Some(wallet) = self.core_wallet() {
                     self.stop_all_services().await?;
 
@@ -610,7 +610,7 @@ impl KaspaService {
                 }
             }
 
-            KaspadServiceEvents::Exit => {
+            BunkerdServiceEvents::Exit => {
                 return Ok(true);
             }
         }
@@ -620,9 +620,9 @@ impl KaspaService {
 
     async fn handle_multiplexer(
         &self,
-        event: Box<kaspa_wallet_core::events::Events>,
+        event: Box<bunkernet_wallet_core::events::Events>,
     ) -> Result<()> {
-        // use kaspa_wallet_core::events::Events as CoreWalletEvents;
+        // use bunkernet_wallet_core::events::Events as CoreWalletEvents;
 
         match *event {
             CoreWalletEvents::DaaScoreChange { .. } => {}
@@ -648,7 +648,7 @@ impl KaspaService {
         Ok(())
     }
 
-    fn core_wallet_notify(&self, event: kaspa_wallet_core::events::Events) -> Result<()> {
+    fn core_wallet_notify(&self, event: bunkernet_wallet_core::events::Events) -> Result<()> {
         self.application_events
             .sender
             .try_send(crate::events::Events::Wallet {
@@ -665,9 +665,9 @@ impl KaspaService {
 }
 
 #[async_trait]
-impl Service for KaspaService {
+impl Service for BunkerNetService {
     fn name(&self) -> &'static str {
-        "kaspa-service"
+        "bunkernet-service"
     }
 
     async fn spawn(self: Arc<Self>) -> Result<()> {
@@ -683,7 +683,7 @@ impl Service for KaspaService {
         // ^ TODO: - CHECK IF THE WALLET IS OPEN, GET WALLET CONTEXT
 
         let status = if runtime::is_chrome_extension() {
-            self.wallet().get_status(Some("kaspa-ng")).await.ok()
+            self.wallet().get_status(Some("bunker-ng")).await.ok()
         } else {
             None
         };
@@ -708,7 +708,7 @@ impl Service for KaspaService {
                 if is_connected {
                     let network_id = network_id.unwrap_or_else(|| self.network().into());
 
-                    // let event = Box::new(kaspa_wallet_core::events::Events::Connect {
+                    // let event = Box::new(bunkernet_wallet_core::events::Events::Connect {
                     //     network_id,
                     //     url: url.clone(),
                     // });
@@ -782,7 +782,7 @@ impl Service for KaspaService {
                 // new instance - setup new context
                 let context = Context {};
                 self.wallet()
-                    .retain_context("kaspa-ng", Some(borsh::to_vec(&context)?))
+                    .retain_context("bunker-ng", Some(borsh::to_vec(&context)?))
                     .await?;
             }
         } else {
@@ -858,7 +858,7 @@ impl Service for KaspaService {
     fn terminate(self: Arc<Self>) {
         self.service_events
             .sender
-            .try_send(KaspadServiceEvents::Exit)
+            .try_send(BunkerdServiceEvents::Exit)
             .unwrap();
     }
 
@@ -868,7 +868,7 @@ impl Service for KaspaService {
     }
 }
 
-impl KaspadServiceEvents {
+impl BunkerdServiceEvents {
     pub fn from_node_settings(
         node_settings: &NodeSettings,
         options: Option<RpcOptions>,
@@ -877,36 +877,36 @@ impl KaspadServiceEvents {
             if #[cfg(not(target_arch = "wasm32"))] {
 
                 match &node_settings.node_kind {
-                    KaspadNodeKind::Disable => {
-                        Ok(KaspadServiceEvents::Disable { network : node_settings.network })
+                    BunkerdNodeKind::Disable => {
+                        Ok(BunkerdServiceEvents::Disable { network : node_settings.network })
                     }
-                    KaspadNodeKind::IntegratedInProc => {
+                    BunkerdNodeKind::IntegratedInProc => {
                         // let config = ;
-                        Ok(KaspadServiceEvents::StartInternalInProc { config : Config::from(node_settings.clone()), network : node_settings.network })
+                        Ok(BunkerdServiceEvents::StartInternalInProc { config : Config::from(node_settings.clone()), network : node_settings.network })
                     }
-                    KaspadNodeKind::IntegratedAsDaemon => {
-                        Ok(KaspadServiceEvents::StartInternalAsDaemon { config : Config::from(node_settings.clone()), network : node_settings.network })
+                    BunkerdNodeKind::IntegratedAsDaemon => {
+                        Ok(BunkerdServiceEvents::StartInternalAsDaemon { config : Config::from(node_settings.clone()), network : node_settings.network })
                     }
-                    KaspadNodeKind::IntegratedAsPassiveSync => {
-                        Ok(KaspadServiceEvents::StartInternalAsPassiveSync { config : Config::from(node_settings.clone()), network : node_settings.network })
+                    BunkerdNodeKind::IntegratedAsPassiveSync => {
+                        Ok(BunkerdServiceEvents::StartInternalAsPassiveSync { config : Config::from(node_settings.clone()), network : node_settings.network })
                     }
-                    KaspadNodeKind::ExternalAsDaemon => {
-                        let path = node_settings.kaspad_daemon_binary.clone();
-                        Ok(KaspadServiceEvents::StartExternalAsDaemon { path : PathBuf::from(path), config : Config::from(node_settings.clone()), network : node_settings.network })
+                    BunkerdNodeKind::ExternalAsDaemon => {
+                        let path = node_settings.bunkerd_daemon_binary.clone();
+                        Ok(BunkerdServiceEvents::StartExternalAsDaemon { path : PathBuf::from(path), config : Config::from(node_settings.clone()), network : node_settings.network })
                     }
-                    KaspadNodeKind::Remote => {
-                        Ok(KaspadServiceEvents::StartRemoteConnection { rpc_config : RpcConfig::from_node_settings(node_settings,options), network : node_settings.network })
+                    BunkerdNodeKind::Remote => {
+                        Ok(BunkerdServiceEvents::StartRemoteConnection { rpc_config : RpcConfig::from_node_settings(node_settings,options), network : node_settings.network })
                     }
                 }
 
             } else {
 
                 match &node_settings.node_kind {
-                    KaspadNodeKind::Disable => {
-                        Ok(KaspadServiceEvents::Disable { network : node_settings.network })
+                    BunkerdNodeKind::Disable => {
+                        Ok(BunkerdServiceEvents::Disable { network : node_settings.network })
                     }
-                    KaspadNodeKind::Remote => {
-                        Ok(KaspadServiceEvents::StartRemoteConnection { rpc_config : RpcConfig::from_node_settings(node_settings,options), network : node_settings.network })
+                    BunkerdNodeKind::Remote => {
+                        Ok(BunkerdServiceEvents::StartRemoteConnection { rpc_config : RpcConfig::from_node_settings(node_settings,options), network : node_settings.network })
                     }
                 }
             }

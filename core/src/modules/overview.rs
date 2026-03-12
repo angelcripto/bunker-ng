@@ -3,7 +3,7 @@ use workflow_core::runtime::is_wasm;
 use egui::load::Bytes;
 
 #[cfg(not(feature = "lean"))]
-use kaspa_metrics_core::{Metric,MetricGroup};
+use bunkernet_metrics_core::{Metric,MetricGroup};
 #[cfg(not(feature = "lean"))]
 use egui_plot::{
     Legend,
@@ -114,7 +114,7 @@ impl Overview {
         let logo_rect = Rect::from_min_size(Pos2::new(left, top), logo_size);
 
         if screen_rect.width() > 768.0 && !core.device().single_pane() {
-            Image::new(ImageSource::Bytes { uri : Cow::Borrowed("bytes://logo.svg"), bytes : Bytes::Static(crate::app::KASPA_NG_LOGO_SVG)})
+            Image::new(ImageSource::Bytes { uri : Cow::Borrowed("bytes://logo.svg"), bytes : Bytes::Static(crate::app::BUNKER_NG_LOGO_SVG)})
             .maintain_aspect_ratio(true)
             .max_size(logo_size)
             .fit_to_exact_size(logo_size)
@@ -180,14 +180,14 @@ impl Overview {
                     }
 
                 #[cfg(not(target_arch = "wasm32"))]
-                CollapsingHeader::new(i18n("Kaspa NG"))
+                CollapsingHeader::new(i18n("BunkerNet NG"))
                     .default_open(true)
                     .show(ui, |ui| {
                         use egui_phosphor::light::CLOUD;
 
                         ui.hyperlink_to_tab(
-                            format!("• {CLOUD} {}",i18n("Kaspa NG online")),
-                            "https://kaspa-ng.org"
+                            format!("• {CLOUD} {}",i18n("BunkerNet NG online")),
+                            "https://bunker-ng.org"
                         );
                     });
 
@@ -204,7 +204,7 @@ impl Overview {
                 
                                         ui.hyperlink_to_tab(
                                             format!("• {DATABASE} {}",i18n("Explorer")),
-                                            "https://explorer.kaspa.org/",
+                                            "https://explorer.bunkernet.org/",
                                         );
                                         ui.hyperlink_to_tab(
                                             format!("• {CHART_SCATTER} {}",i18n("Statistics")),
@@ -231,11 +231,11 @@ impl Overview {
                 
                                         ui.hyperlink_to_tab(
                                             format!("• {DATABASE} {}",i18n("Explorer")),
-                                            "https://explorer-tn10.kaspa.org/",
+                                            "https://explorer-tn10.bunkernet.org/",
                                         );
                                         ui.hyperlink_to_tab(
                                             format!("• {HAND_COINS} {}",i18n("Faucet")),
-                                            "https://faucet-testnet.kaspanet.io",
+                                            "https://faucet-testnet.bunkernet.io",
                                         );
                 
                                     });
@@ -258,7 +258,7 @@ impl Overview {
                     //                     );
                     //                     ui.hyperlink_to_tab(
                     //                         format!("• {HAND_COINS} {}",i18n("Faucet")),
-                    //                         "https://faucet-t11.kaspanet.io",
+                    //                         "https://faucet-t11.bunkernet.io",
                     //                     );
                     //                 });
                     //             self.render_network_info(core, ui);
@@ -274,12 +274,12 @@ impl Overview {
                         use egui_phosphor::light::{DISCORD_LOGO,GITHUB_LOGO};
 
                         ui.hyperlink_to_tab(
-                            format!("• {}",i18n("Kaspa NG on GitHub")),
-                            "https://github.com/aspectron/kaspa-ng"
+                            format!("• {}",i18n("BunkerNet NG on GitHub")),
+                            "https://github.com/aspectron/bunker-ng"
                         );
                         ui.hyperlink_to_tab(
                             format!("• {}",i18n("Rusty Kaspa on GitHub")),
-                            "https://github.com/kaspanet/rusty-kaspa",
+                            "https://github.com/kaspanet/rusty-bunkernet",
                         );
                         ui.hyperlink_to_tab(
                             format!("• {}",i18n("Kaspa Integration Guide")),
@@ -345,8 +345,8 @@ impl Overview {
                 CollapsingHeader::new(i18n("Build"))
                     .default_open(true)
                     .show(ui, |ui| {
-                        ui.add(Label::new(format!("Kaspa NG v{}-{} + Rusty Kaspa {}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, kaspa_version())));
-                        // if ui.add(Label::new(format!("Kaspa NG v{}-{} + Rusty Kaspa v{}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, kaspa_wallet_core::version())).sense(Sense::click())).clicked() {
+                        ui.add(Label::new(format!("BunkerNet NG v{}-{} + Rusty Kaspa {}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, bunkernet_version())));
+                        // if ui.add(Label::new(format!("BunkerNet NG v{}-{} + Rusty Kaspa v{}", env!("CARGO_PKG_VERSION"),crate::app::GIT_DESCRIBE, bunkernet_wallet_core::version())).sense(Sense::click())).clicked() {
                         //     core.select::<modules::Changelog>();
                         // }
                         // ui.label(format!("Timestamp: {}", crate::app::BUILD_TIMESTAMP));
@@ -374,12 +374,12 @@ impl Overview {
                             ui.label("Rusty Kaspa");
                             ui.label("Copyright (c) 2024 Kaspa Developers");
                             ui.label("License: ISC");
-                            ui.hyperlink_url_to_tab("https://github.com/kaspanet/rusty-kaspa");
+                            ui.hyperlink_url_to_tab("https://github.com/kaspanet/rusty-bunkernet");
                             ui.label("");
-                            ui.label("Kaspa NG");
+                            ui.label("BunkerNet NG");
                             ui.label("Copyright (c) 2024 ASPECTRON");
                             ui.label("License: MIT (RESTRICTED)");
-                            ui.hyperlink_url_to_tab("https://github.com/aspectron/kaspa-ng");
+                            ui.hyperlink_url_to_tab("https://github.com/aspectron/bunker-ng");
                             ui.label("");
                             ui.label("WORKFLOW-RS");
                             ui.label("Copyright (c) 2024 ASPECTRON");
@@ -407,7 +407,7 @@ impl Overview {
                     CollapsingHeader::new(i18n("Donations"))
                         .default_open(true)
                         .show(ui, |ui| {
-                            if ui.link(i18n("Please support Kaspa NG development")).clicked() {
+                            if ui.link(i18n("Please support BunkerNet NG development")).clicked() {
                                 core.select::<modules::Donations>();
                             }
                         });
@@ -432,9 +432,9 @@ impl Overview {
             } else {
                 (fees.low.value().feerate, fees.economic.value().feerate, fees.priority.value().feerate)
             };
-            let low_kas = sompi_to_kaspa_string_with_suffix((low * BASIC_TRANSACTION_MASS as f64) as u64, &core.settings.node.network.into());
-            let med_kas = sompi_to_kaspa_string_with_suffix((med * BASIC_TRANSACTION_MASS as f64) as u64, &core.settings.node.network.into());
-            let high_kas = sompi_to_kaspa_string_with_suffix((high * BASIC_TRANSACTION_MASS as f64) as u64, &core.settings.node.network.into());
+            let low_kas = sompi_to_bunkernet_string_with_suffix((low * BASIC_TRANSACTION_MASS as f64) as u64, &core.settings.node.network.into());
+            let med_kas = sompi_to_bunkernet_string_with_suffix((med * BASIC_TRANSACTION_MASS as f64) as u64, &core.settings.node.network.into());
+            let high_kas = sompi_to_bunkernet_string_with_suffix((high * BASIC_TRANSACTION_MASS as f64) as u64, &core.settings.node.network.into());
             CollapsingHeader::new(i18n("Fee Market"))
                 .default_open(true)
                 .show(ui, |ui| {

@@ -1,8 +1,8 @@
 use crate::imports::*;
 use egui_phosphor::light::*;
-use kaspa_consensus_core::tx::{TransactionInput, TransactionOutpoint, TransactionOutput};
-use kaspa_txscript::standard::extract_script_pub_key_address;
-use kaspa_wallet_core::storage::{
+use bunkernet_consensus_core::tx::{TransactionInput, TransactionOutpoint, TransactionOutput};
+use bunkernet_txscript::standard::extract_script_pub_key_address;
+use bunkernet_wallet_core::storage::{
     transaction::{TransactionData, UtxoRecord},
     TransactionKind,
 };
@@ -142,11 +142,11 @@ impl Transaction {
         let Context { record, maturity } = &*self.context();
 
         let padding = 9 + largest
-            .map(|largest| sompi_to_kaspa(largest).trunc().separated_string().len())
+            .map(|largest| sompi_to_bunkernet(largest).trunc().separated_string().len())
             .unwrap_or_default();
 
-        let ps2k = |sompi| padded_sompi_to_kaspa_string_with_suffix(sompi, &network_type, padding);
-        let s2k = |sompi| sompi_to_kaspa_string_with_suffix(sompi, &network_type);
+        let ps2k = |sompi| padded_sompi_to_bunkernet_string_with_suffix(sompi, &network_type, padding);
+        let s2k = |sompi| sompi_to_bunkernet_string_with_suffix(sompi, &network_type);
 
         let timestamp = record
             .unixtime_as_locale_string()
@@ -368,14 +368,14 @@ impl Transaction {
                 } else {
                     ljb(&header)
                         .text("Sweep:", default_color)
-                        .text(&sompi_to_kaspa_string(*aggregate_input_value), strong_color)
+                        .text(&sompi_to_bunkernet_string(*aggregate_input_value), strong_color)
                         .text("Fees:", default_color)
                         .text(
-                            &sompi_to_kaspa_string(*fees),
+                            &sompi_to_bunkernet_string(*fees),
                             TransactionKind::Outgoing.as_color(),
                         )
                         .text("Change:", default_color)
-                        .text(&sompi_to_kaspa_string(*change_value), strong_color)
+                        .text(&sompi_to_bunkernet_string(*change_value), strong_color)
                 };
 
                 // ui.collapsable(&transaction_id, false, |ui,state| {
@@ -413,14 +413,14 @@ impl Transaction {
                 //         } else {
                 //             // LayoutJobBuilder::new(16.0, Some(font_id_header.clone()))
                 //             // .text("Sweep:", default_color)
-                //             // .text(&sompi_to_kaspa_string(*aggregate_input_value), strong_color)
+                //             // .text(&sompi_to_bunkernet_string(*aggregate_input_value), strong_color)
                 //             // .text("Fees:", default_color)
                 //             // .text(
-                //             //     &sompi_to_kaspa_string(*fees),
+                //             //     &sompi_to_bunkernet_string(*fees),
                 //             //     TransactionKind::Outgoing.as_color(),
                 //             // )
                 //             // .text("Change:", default_color)
-                //             // .text(&sompi_to_kaspa_string(*change_value), strong_color)
+                //             // .text(&sompi_to_bunkernet_string(*change_value), strong_color)
                 //         }
 
                 //         if !maturity.unwrap_or(true) {
@@ -527,7 +527,7 @@ impl Transaction {
                         )
                         .label(ui);
 
-                    let address_prefix: kaspa_addresses::Prefix = network.into();
+                    let address_prefix: bunkernet_addresses::Prefix = network.into();
 
                     for output in transaction.outputs.iter() {
                         let TransactionOutput {
@@ -601,13 +601,13 @@ impl Transaction {
                 collapsing_header.show(ui, |ui| {
                     ljb(&content)
                         .text("Sweep:", default_color)
-                        .text(&sompi_to_kaspa_string(aggregate_input_value), strong_color)
+                        .text(&sompi_to_bunkernet_string(aggregate_input_value), strong_color)
                         .label(ui);
 
                     ljb(&content)
                         .text("Fees:", default_color)
                         .text(
-                            &sompi_to_kaspa_string(*fees),
+                            &sompi_to_bunkernet_string(*fees),
                             TransactionKind::Outgoing.as_color(),
                         )
                         .label(ui);
@@ -619,26 +619,26 @@ impl Transaction {
 }
 
 #[inline]
-pub fn sompi_to_kaspa(sompi: u64) -> f64 {
-    sompi as f64 / SOMPI_PER_KASPA as f64
+pub fn sompi_to_bunkernet(sompi: u64) -> f64 {
+    sompi as f64 / SOMPI_PER_BUNKERNET as f64
 }
 
 #[inline]
-pub fn kaspa_to_sompi(kaspa: f64) -> u64 {
-    (kaspa * SOMPI_PER_KASPA as f64) as u64
+pub fn bunkernet_to_sompi(bnt: f64) -> u64 {
+    (bnt * SOMPI_PER_BUNKERNET as f64) as u64
 }
 
 #[inline]
-pub fn sompi_to_kaspa_string(sompi: u64) -> String {
-    separated_float!(format!("{:.8}", sompi_to_kaspa(sompi)))
+pub fn sompi_to_bunkernet_string(sompi: u64) -> String {
+    separated_float!(format!("{:.8}", sompi_to_bunkernet(sompi)))
 }
 #[inline]
-pub fn padded_sompi_to_kaspa_string(sompi: u64, padding: usize) -> String {
-    separated_float!(format!("{:.8}", sompi_to_kaspa(sompi)))
+pub fn padded_sompi_to_bunkernet_string(sompi: u64, padding: usize) -> String {
+    separated_float!(format!("{:.8}", sompi_to_bunkernet(sompi)))
         .pad_to_width_with_alignment(padding, Alignment::Right)
 }
 
-pub fn kaspa_suffix(network_type: &NetworkType) -> &'static str {
+pub fn bunkernet_suffix(network_type: &NetworkType) -> &'static str {
     match network_type {
         NetworkType::Mainnet => "KAS",
         NetworkType::Testnet => "TKAS",
@@ -648,20 +648,20 @@ pub fn kaspa_suffix(network_type: &NetworkType) -> &'static str {
 }
 
 #[inline]
-pub fn sompi_to_kaspa_string_with_suffix(sompi: u64, network_type: &NetworkType) -> String {
-    let kas = sompi_to_kaspa(sompi).separated_string();
-    let suffix = kaspa_suffix(network_type);
+pub fn sompi_to_bunkernet_string_with_suffix(sompi: u64, network_type: &NetworkType) -> String {
+    let kas = sompi_to_bunkernet(sompi).separated_string();
+    let suffix = bunkernet_suffix(network_type);
     format!("{kas} {suffix}")
 }
 
 #[inline]
-pub fn padded_sompi_to_kaspa_string_with_suffix(
+pub fn padded_sompi_to_bunkernet_string_with_suffix(
     sompi: u64,
     network_type: &NetworkType,
     padding: usize,
 ) -> String {
-    let kas = padded_sompi_to_kaspa_string(sompi, padding);
-    let suffix = kaspa_suffix(network_type);
+    let kas = padded_sompi_to_bunkernet_string(sompi, padding);
+    let suffix = bunkernet_suffix(network_type);
     format!("{kas} {suffix}")
 }
 

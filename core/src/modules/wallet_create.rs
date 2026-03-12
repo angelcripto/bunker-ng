@@ -1,7 +1,7 @@
 use crate::imports::*;
-use kaspa_wallet_core::{api::{AccountsDiscoveryKind, AccountsDiscoveryRequest}, encryption::EncryptionKind, storage::keydata::PrvKeyDataVariantKind, wallet::{AccountCreateArgs, PrvKeyDataCreateArgs, WalletCreateArgs}};
+use bunkernet_wallet_core::{api::{AccountsDiscoveryKind, AccountsDiscoveryRequest}, encryption::EncryptionKind, storage::keydata::PrvKeyDataVariantKind, wallet::{AccountCreateArgs, PrvKeyDataCreateArgs, WalletCreateArgs}};
 use slug::slugify;
-use kaspa_bip32::{WordCount, Mnemonic, Language};
+use bunkernet_bip32::{WordCount, Mnemonic, Language};
 use crate::utils::{secret_score, secret_score_to_text};
 
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
@@ -164,7 +164,7 @@ impl WalletCreate {
                 ui.label("");
 
                 ui.label(i18n("Select this option if your wallet was created"));
-                ui.label(i18n("using KDX or kaspanet.io web wallet"));
+                ui.label(i18n("using KDX or bunkernet.io web wallet"));
                 ui.label("");
                 // if ui.large_selected_button(*import_legacy, format!("    {}    ", i18n("Legacy 12 word mnemonic"))).clicked() {
                 if ui.large_button_enabled(!*bip39_passphrase,format!("    {}    ", i18n("Legacy 12 word mnemonic"))).clicked() {
@@ -259,7 +259,7 @@ impl WalletCreate {
                             phrase.zeroize();
                             ui.label("");
                             ui.label(RichText::new(i18n_args("Error processing mnemonic: {err}",&[("err",err.to_string())])).color(error_color()));
-                            if matches!(err,kaspa_bip32::Error::Bip39) {
+                            if matches!(err,bunkernet_bip32::Error::Bip39) {
                                 ui.label(RichText::new(i18n("Your mnemonic phrase is invalid")).color(error_color()));
                             }
                             ui.label("");
@@ -1040,13 +1040,13 @@ impl ModuleT for WalletCreate {
     
                         match wallet_file_data{
                             WalletFileData::Legacy(data)=>{
-                                let key_data = kaspa_wallet_core::compat::gen0::get_v0_keydata(&data, &import_secret)?;
+                                let key_data = bunkernet_wallet_core::compat::gen0::get_v0_keydata(&data, &import_secret)?;
                                 Ok(WalletFileDecryptedData::Legacy(key_data.mnemonic.clone()))
                             }
                             WalletFileData::GoWallet(data)=>{
                                 let mnemonic = match data {
                                     WalletType::SingleV0(data)=>{
-                                        kaspa_wallet_core::compat::gen1::decrypt_mnemonic(
+                                        bunkernet_wallet_core::compat::gen1::decrypt_mnemonic(
                                             data.num_threads,
                                             data.encrypted_mnemonic,
                                             import_secret.as_ref()

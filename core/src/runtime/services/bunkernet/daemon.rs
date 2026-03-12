@@ -1,12 +1,12 @@
 use crate::imports::*;
-use crate::runtime::services::kaspa::{Config, KaspadServiceEvents};
+use crate::runtime::services::bunkernet::{Config, BunkerdServiceEvents};
 use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use workflow_core::prelude::DuplexChannel;
 
-/// Termination method with which to terminate the kaspad process.
-/// This should remain Sigkill until Kaspad learns to terminate
+/// Termination method with which to terminate the bunkerd process.
+/// This should remain Sigkill until Bunkerd learns to terminate
 /// rapidly during it's sync process.
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 enum TerminationMethod {
@@ -19,7 +19,7 @@ struct Inner {
     path: Option<PathBuf>,
     is_running: Arc<AtomicBool>,
     pid: Mutex<Option<u32>>,
-    service_events: Channel<KaspadServiceEvents>,
+    service_events: Channel<BunkerdServiceEvents>,
     task_ctl: DuplexChannel,
     termination_method: TerminationMethod,
 }
@@ -30,7 +30,7 @@ pub struct Daemon {
 }
 
 impl Daemon {
-    pub fn new(path: Option<PathBuf>, service_events: &Channel<KaspadServiceEvents>) -> Self {
+    pub fn new(path: Option<PathBuf>, service_events: &Channel<BunkerdServiceEvents>) -> Self {
         Self {
             inner: Arc::new(Inner {
                 path,
@@ -56,13 +56,13 @@ impl Daemon {
         use nix::sys::signal::Signal;
         use nix::unistd::Pid;
         if let Err(err) = nix::sys::signal::kill(Pid::from_raw(pid as i32), Signal::SIGTERM) {
-            println!("kaspad sigterm error: {:?}", err);
+            println!("bunkerd sigterm error: {:?}", err);
         }
     }
 }
 
 #[async_trait]
-impl super::Kaspad for Daemon {
+impl super::Bunkerd for Daemon {
     async fn start(self: Arc<Self>, config: Config) -> Result<()> {
         let mut cmd = if let Some(path) = self.inner().path.clone() {
             Command::new(path)
@@ -73,7 +73,7 @@ impl super::Kaspad for Daemon {
 
         let cmd = cmd
             .args(config)
-            .env("KASPA_NG_DAEMON", "1")
+            .env("BUNKER_NG_DAEMON", "1")
             .stdout(Stdio::piped());
 
         let is_running = self.inner().is_running.clone();
@@ -107,16 +107,16 @@ impl super::Kaspad for Daemon {
                                 this.sigterm(_pid);
                             }
                         } else if let Err(err) = child.start_kill() {
-                            println!("kaspa daemon start_kill error: {:?}", err);
+                            println!("bunkernet daemon start_kill error: {:?}", err);
                         }
                     }
                     status = child.wait().fuse() => {
                         match status {
                             Ok(_status) => {
-                                // println!("kaspad shutdown: {:?}", _status);
+                                // println!("bunkerd shutdown: {:?}", _status);
                             }
                             Err(err) => {
-                                println!("kaspad shutdown error: {:?}", err);
+                                println!("bunkerd shutdown error: {:?}", err);
                             }
                         }
                         is_running.store(false,Ordering::SeqCst);
@@ -125,8 +125,8 @@ impl super::Kaspad for Daemon {
 
                     line = reader.next_line().fuse() => {
                         if let Ok(Some(line)) = line {
-                            // println!("kaspad: {}", line);
-                            stdout_relay_sender.send(KaspadServiceEvents::Stdout { line }).await.unwrap();
+                            // println!("bunkerd: {}", line);
+                            stdout_relay_sender.send(BunkerdServiceEvents::Stdout { line }).await.unwrap();
                         }
                     }
                 }

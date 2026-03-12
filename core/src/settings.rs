@@ -1,8 +1,8 @@
 use crate::imports::*;
-use kaspa_metrics_core::Metric;
-use kaspa_utils::networking::ContextualNetAddress;
-use kaspa_wallet_core::storage::local::storage::Storage;
-use kaspa_wrpc_client::WrpcEncoding;
+use bunkernet_metrics_core::Metric;
+use bunkernet_utils::networking::ContextualNetAddress;
+use bunkernet_wallet_core::storage::local::storage::Storage;
+use bunkernet_wrpc_client::WrpcEncoding;
 use workflow_core::{runtime, task::spawn};
 
 const SETTINGS_REVISION: &str = "0.0.0";
@@ -11,7 +11,7 @@ cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
         #[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
         #[serde(rename_all = "kebab-case")]
-        pub enum KaspadNodeKind {
+        pub enum BunkerdNodeKind {
             Disable,
             Remote,
             IntegratedInProc,
@@ -21,24 +21,24 @@ cfg_if! {
             ExternalAsDaemon,
         }
 
-        const KASPAD_NODE_KINDS: [KaspadNodeKind; 6] = [
-            KaspadNodeKind::Disable,
-            KaspadNodeKind::Remote,
-            KaspadNodeKind::IntegratedInProc,
-            KaspadNodeKind::IntegratedAsDaemon,
-            KaspadNodeKind::IntegratedAsPassiveSync,
-            KaspadNodeKind::ExternalAsDaemon,
+        const BUNKERD_NODE_KINDS: [BunkerdNodeKind; 6] = [
+            BunkerdNodeKind::Disable,
+            BunkerdNodeKind::Remote,
+            BunkerdNodeKind::IntegratedInProc,
+            BunkerdNodeKind::IntegratedAsDaemon,
+            BunkerdNodeKind::IntegratedAsPassiveSync,
+            BunkerdNodeKind::ExternalAsDaemon,
         ];
 
-        impl std::fmt::Display for KaspadNodeKind {
+        impl std::fmt::Display for BunkerdNodeKind {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
-                    KaspadNodeKind::Disable => write!(f, "{}", i18n("Disabled")),
-                    KaspadNodeKind::Remote => write!(f, "{}", i18n("Remote")),
-                    KaspadNodeKind::IntegratedInProc => write!(f, "{}", i18n("Integrated Node")),
-                    KaspadNodeKind::IntegratedAsDaemon => write!(f, "{}", i18n("Integrated Daemon")),
-                    KaspadNodeKind::IntegratedAsPassiveSync => write!(f, "{}", i18n("Passive Sync")),
-                    KaspadNodeKind::ExternalAsDaemon => write!(f, "{}", i18n("External Daemon")),
+                    BunkerdNodeKind::Disable => write!(f, "{}", i18n("Disabled")),
+                    BunkerdNodeKind::Remote => write!(f, "{}", i18n("Remote")),
+                    BunkerdNodeKind::IntegratedInProc => write!(f, "{}", i18n("Integrated Node")),
+                    BunkerdNodeKind::IntegratedAsDaemon => write!(f, "{}", i18n("Integrated Daemon")),
+                    BunkerdNodeKind::IntegratedAsPassiveSync => write!(f, "{}", i18n("Passive Sync")),
+                    BunkerdNodeKind::ExternalAsDaemon => write!(f, "{}", i18n("External Daemon")),
                 }
             }
         }
@@ -46,74 +46,74 @@ cfg_if! {
     } else {
         #[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
         #[serde(rename_all = "kebab-case")]
-        pub enum KaspadNodeKind {
+        pub enum BunkerdNodeKind {
             #[default]
             Disable,
             Remote,
         }
 
-        const KASPAD_NODE_KINDS: [KaspadNodeKind; 1] = [
-            KaspadNodeKind::Remote,
+        const BUNKERD_NODE_KINDS: [BunkerdNodeKind; 1] = [
+            BunkerdNodeKind::Remote,
         ];
 
-        impl std::fmt::Display for KaspadNodeKind {
+        impl std::fmt::Display for BunkerdNodeKind {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
-                    KaspadNodeKind::Disable => write!(f, "Disable"),
-                    KaspadNodeKind::Remote => write!(f, "Remote"),
+                    BunkerdNodeKind::Disable => write!(f, "Disable"),
+                    BunkerdNodeKind::Remote => write!(f, "Remote"),
                 }
             }
         }
     }
 }
 
-impl KaspadNodeKind {
-    pub fn iter() -> impl Iterator<Item = &'static KaspadNodeKind> {
-        KASPAD_NODE_KINDS.iter()
+impl BunkerdNodeKind {
+    pub fn iter() -> impl Iterator<Item = &'static BunkerdNodeKind> {
+        BUNKERD_NODE_KINDS.iter()
     }
 
     pub fn describe(&self) -> &str {
         match self {
-            KaspadNodeKind::Disable => i18n("Disables node connectivity (Offline Mode)."),
-            KaspadNodeKind::Remote => i18n("Connects to a Remote Rusty Kaspa Node via wRPC."),
+            BunkerdNodeKind::Disable => i18n("Disables node connectivity (Offline Mode)."),
+            BunkerdNodeKind::Remote => i18n("Connects to a Remote Rusty Kaspa Node via wRPC."),
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedInProc => i18n("The node runs as a part of the Kaspa-NG application process. This reduces communication overhead (experimental)."),
+            BunkerdNodeKind::IntegratedInProc => i18n("The node runs as a part of the Kaspa-NG application process. This reduces communication overhead (experimental)."),
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedAsDaemon => i18n("The node is spawned as a child daemon process (recommended)."),
+            BunkerdNodeKind::IntegratedAsDaemon => i18n("The node is spawned as a child daemon process (recommended)."),
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedAsPassiveSync => i18n("The node synchronizes in the background while Kaspa-NG is connected to a public node. Once the node is synchronized, you can switch to the 'Integrated Daemon' mode."),
+            BunkerdNodeKind::IntegratedAsPassiveSync => i18n("The node synchronizes in the background while Kaspa-NG is connected to a public node. Once the node is synchronized, you can switch to the 'Integrated Daemon' mode."),
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::ExternalAsDaemon => i18n("A binary at another location is spawned a child process (experimental, for development purposes only)."),
+            BunkerdNodeKind::ExternalAsDaemon => i18n("A binary at another location is spawned a child process (experimental, for development purposes only)."),
         }
     }
 
     pub fn is_config_capable(&self) -> bool {
         match self {
-            KaspadNodeKind::Disable => false,
-            KaspadNodeKind::Remote => false,
+            BunkerdNodeKind::Disable => false,
+            BunkerdNodeKind::Remote => false,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedInProc => true,
+            BunkerdNodeKind::IntegratedInProc => true,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedAsDaemon => true,
+            BunkerdNodeKind::IntegratedAsDaemon => true,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedAsPassiveSync => true,
+            BunkerdNodeKind::IntegratedAsPassiveSync => true,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::ExternalAsDaemon => true,
+            BunkerdNodeKind::ExternalAsDaemon => true,
         }
     }
 
     pub fn is_local(&self) -> bool {
         match self {
-            KaspadNodeKind::Disable => false,
-            KaspadNodeKind::Remote => false,
+            BunkerdNodeKind::Disable => false,
+            BunkerdNodeKind::Remote => false,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedInProc => true,
+            BunkerdNodeKind::IntegratedInProc => true,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedAsDaemon => true,
+            BunkerdNodeKind::IntegratedAsDaemon => true,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::IntegratedAsPassiveSync => true,
+            BunkerdNodeKind::IntegratedAsPassiveSync => true,
             #[cfg(not(target_arch = "wasm32"))]
-            KaspadNodeKind::ExternalAsDaemon => true,
+            BunkerdNodeKind::ExternalAsDaemon => true,
         }
     }
 }
@@ -161,7 +161,7 @@ impl Default for RpcConfig {
                 let url = "127.0.0.1";
             } else {
                 use workflow_dom::utils::*;
-                let url = window().location().hostname().expect("KaspadNodeKind: Unable to get hostname");
+                let url = window().location().hostname().expect("BunkerdNodeKind: Unable to get hostname");
             }
         }
         RpcConfig::Wrpc {
@@ -375,14 +375,14 @@ pub struct NodeSettings {
     pub memory_scale: NodeMemoryScale,
 
     pub network: Network,
-    pub node_kind: KaspadNodeKind,
-    pub kaspad_daemon_binary: String,
-    pub kaspad_daemon_args: String,
-    pub kaspad_daemon_args_enable: bool,
+    pub node_kind: BunkerdNodeKind,
+    pub bunkerd_daemon_binary: String,
+    pub bunkerd_daemon_args: String,
+    pub bunkerd_daemon_args_enable: bool,
     #[serde(default)]
-    pub kaspad_daemon_storage_folder_enable: bool,
+    pub bunkerd_daemon_storage_folder_enable: bool,
     #[serde(default)]
-    pub kaspad_daemon_storage_folder: String,
+    pub bunkerd_daemon_storage_folder: String,
 }
 
 impl Default for NodeSettings {
@@ -401,12 +401,12 @@ impl Default for NodeSettings {
             enable_upnp: true,
             memory_scale: NodeMemoryScale::default(),
             network: Network::default(),
-            node_kind: KaspadNodeKind::default(),
-            kaspad_daemon_binary: String::default(),
-            kaspad_daemon_args: String::default(),
-            kaspad_daemon_args_enable: false,
-            kaspad_daemon_storage_folder_enable: false,
-            kaspad_daemon_storage_folder: String::default(),
+            node_kind: BunkerdNodeKind::default(),
+            bunkerd_daemon_binary: String::default(),
+            bunkerd_daemon_args: String::default(),
+            bunkerd_daemon_args_enable: false,
+            bunkerd_daemon_storage_folder_enable: false,
+            bunkerd_daemon_storage_folder: String::default(),
         }
     }
 }
@@ -425,8 +425,8 @@ impl NodeSettings {
                 } else if self.connection_config_kind != other.connection_config_kind
                 {
                     Some(true)
-                } else if self.kaspad_daemon_storage_folder_enable != other.kaspad_daemon_storage_folder_enable
-                    || other.kaspad_daemon_storage_folder_enable && (self.kaspad_daemon_storage_folder != other.kaspad_daemon_storage_folder)
+                } else if self.bunkerd_daemon_storage_folder_enable != other.bunkerd_daemon_storage_folder_enable
+                    || other.bunkerd_daemon_storage_folder_enable && (self.bunkerd_daemon_storage_folder != other.bunkerd_daemon_storage_folder)
                 {
                     Some(true)
                 } else if self.enable_grpc != other.enable_grpc
@@ -437,13 +437,13 @@ impl NodeSettings {
                     || self.wrpc_json_network_interface != other.wrpc_json_network_interface
                     || self.enable_upnp != other.enable_upnp
                 {
-                    Some(self.node_kind != KaspadNodeKind::IntegratedInProc)
-                } else if self.kaspad_daemon_args != other.kaspad_daemon_args
-                    || self.kaspad_daemon_args_enable != other.kaspad_daemon_args_enable
+                    Some(self.node_kind != BunkerdNodeKind::IntegratedInProc)
+                } else if self.bunkerd_daemon_args != other.bunkerd_daemon_args
+                    || self.bunkerd_daemon_args_enable != other.bunkerd_daemon_args_enable
                 {
                     Some(self.node_kind.is_config_capable())
-                } else if self.kaspad_daemon_binary != other.kaspad_daemon_binary {
-                    Some(self.node_kind == KaspadNodeKind::ExternalAsDaemon)
+                } else if self.bunkerd_daemon_binary != other.bunkerd_daemon_binary {
+                    Some(self.node_kind == BunkerdNodeKind::ExternalAsDaemon)
                 } else {
                     None
                 }
@@ -665,7 +665,7 @@ impl Default for Settings {
 impl Settings {}
 
 fn storage() -> Result<Storage> {
-    Ok(Storage::try_new("kaspa-ng.settings")?)
+    Ok(Storage::try_new("bunker-ng.settings")?)
 }
 
 impl Settings {

@@ -1,4 +1,4 @@
-use kaspa_wrpc_client::Resolver;
+use bunkernet_wrpc_client::Resolver;
 
 use crate::imports::*;
 

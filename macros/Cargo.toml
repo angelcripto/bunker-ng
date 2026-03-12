@@ -1,14 +1,14 @@
 [package]
-name = "kaspa-ng-macros"
+name = "bunker-ng-macros"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
 license = "MIT OR Apache-2.0"
-keywords = ["kaspa-ng"]
+keywords = ["bunker-ng"]
 categories = []
 exclude = ["/.*", "/test"]
 description = """
-Macros for the Kaspa NG project
+Macros for the BunkerNet NG project
 """
 
 [lib]
@@ -23,5 +23,3 @@ quote = "1.0.23"
 sha2 = "0.10.7"
 syn = {version="1.0.107",features=["full","fold","extra-traits","parsing","proc-macro"]}
 rand = "0.8"
-
-# workflow-macro-tools.workspace = true

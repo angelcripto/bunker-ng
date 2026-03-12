@@ -3,8 +3,8 @@ use crate::imports::*;
 pub mod repaint_service;
 pub use repaint_service::RepaintService;
 
-pub mod kaspa;
-pub use kaspa::KaspaService;
+pub mod bunkernet;
+pub use bunkernet::BunkerNetService;
 
 pub mod peer_monitor;
 pub use peer_monitor::PeerMonitorService;
@@ -28,7 +28,7 @@ cfg_if! {
     }
 }
 
-/// Service is a core component of the Kaspa NG application responsible for
+/// Service is a core component of the BunkerNet NG application responsible for
 /// running application services and communication between these services.
 #[async_trait]
 pub trait Service: Sync + Send {

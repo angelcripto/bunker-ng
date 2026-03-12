@@ -1,6 +1,6 @@
-use kaspa_consensus_core::network::NetworkId;
-use kaspa_metrics_core::MetricsSnapshot;
-use kaspa_wallet_core::events::SyncState;
+use bunkernet_consensus_core::network::NetworkId;
+use bunkernet_metrics_core::MetricsSnapshot;
+use bunkernet_wallet_core::events::SyncState;
 
 #[derive(Default)]
 pub struct State {

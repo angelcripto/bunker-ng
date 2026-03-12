@@ -13,7 +13,7 @@ impl Welcome {
         let mut settings = Settings::default();
 
         #[cfg(target_arch = "wasm32")] {
-            settings.node.node_kind = KaspadNodeKind::Remote;
+            settings.node.node_kind = BunkerdNodeKind::Remote;
         }
 
         Self { 
@@ -30,9 +30,9 @@ impl Welcome {
 
         let mut error = None;
 
-        ui.heading(i18n("Welcome to Kaspa NG"));
+        ui.heading(i18n("Welcome to BunkerNet NG"));
         ui.add_space(16.0);
-        ui.label(i18n("Please configure your Kaspa NG settings"));
+        ui.label(i18n("Please configure your BunkerNet NG settings"));
         ui.add_space(16.0);
 
         CollapsingHeader::new(i18n("Settings"))
@@ -61,20 +61,20 @@ impl Welcome {
                     .default_open(true)
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui| {
-                            // KaspadNodeKind::iter().for_each(|node| {
+                            // BunkerdNodeKind::iter().for_each(|node| {
                             [
-                                KaspadNodeKind::Disable,
-                                KaspadNodeKind::Remote,
+                                BunkerdNodeKind::Disable,
+                                BunkerdNodeKind::Remote,
                                 #[cfg(not(target_arch = "wasm32"))]
-                                KaspadNodeKind::IntegratedAsDaemon,
-                                // KaspadNodeKind::ExternalAsDaemon,
-                                // KaspadNodeKind::IntegratedInProc,
+                                BunkerdNodeKind::IntegratedAsDaemon,
+                                // BunkerdNodeKind::ExternalAsDaemon,
+                                // BunkerdNodeKind::IntegratedInProc,
                             ].iter().for_each(|node_kind| {
                                 ui.radio_value(&mut self.settings.node.node_kind, *node_kind, node_kind.to_string()).on_hover_text_at_pointer(node_kind.describe());
                             });
                         });
 
-                        if self.settings.node.node_kind == KaspadNodeKind::Remote {
+                        if self.settings.node.node_kind == BunkerdNodeKind::Remote {
                             error = crate::modules::settings::Settings::render_remote_settings(core,ui,&mut self.settings.node);
                         }
                     });
@@ -159,7 +159,7 @@ impl Welcome {
                             settings.initialized = true;
                             let message = i18n("Unable to store settings");
                             settings.store_sync().expect(message);
-                            self.runtime.kaspa_service().update_services(&self.settings.node, None);
+                            self.runtime.bunkernet_service().update_services(&self.settings.node, None);
                             core.settings = settings.clone();
                             core.get_mut::<modules::Settings>().load(settings);
                             cfg_if!{
@@ -178,9 +178,9 @@ impl Welcome {
         
         ui.vertical_centered(|ui| {
             ui.add_space(32.0);
-            // ui.colored_label(theme_color().alert_color, "Please note - this is a beta release - Kaspa NG is still in early development and is not yet ready for production use.");
+            // ui.colored_label(theme_color().alert_color, "Please note - this is a beta release - BunkerNet NG is still in early development and is not yet ready for production use.");
             // ui.add_space(32.0);
-            ui.label(format!("Kaspa NG v{}  •  Rusty Kaspa v{}", env!("CARGO_PKG_VERSION"), kaspa_wallet_core::version()));
+            ui.label(format!("BunkerNet NG v{}  •  Rusty Kaspa v{}", env!("CARGO_PKG_VERSION"), bunkernet_wallet_core::version()));
             ui.hyperlink_to(
                 "https://kaspa.org",
                 "https://kaspa.org",
@@ -197,7 +197,7 @@ impl Welcome {
         let mut proceed = false;
 
         Panel::new(self)
-            .with_caption(i18n("Welcome to Kaspa NG"))
+            .with_caption(i18n("Welcome to BunkerNet NG"))
             .with_header(|_this, ui| {
                 ui.label(i18n("Please select Kaspa network"));
             })
@@ -223,7 +223,7 @@ impl Welcome {
                 // ui.add_space(32.0);
                 // ui.colored_label(theme_color().alert_color, RichText::new("β").size(64.0));
                 // ui.add_space(8.0);
-                // ui.colored_label(theme_color().alert_color, "Please note - this is a beta release - Kaspa NG is still in early development and is not yet ready for production use.");
+                // ui.colored_label(theme_color().alert_color, "Please note - this is a beta release - BunkerNet NG is still in early development and is not yet ready for production use.");
             })
             .render(ui);        
 
@@ -233,7 +233,7 @@ impl Welcome {
             let message = i18n("Unable to store settings");
             settings.store_sync().expect(message);
             core.settings = settings.clone();
-            self.runtime.kaspa_service().update_services(&settings.node, None);
+            self.runtime.bunkernet_service().update_services(&settings.node, None);
 
             core.get_mut::<modules::Settings>().load(settings);
             core.select::<modules::Overview>();

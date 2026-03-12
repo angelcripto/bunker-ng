@@ -1,11 +1,11 @@
 [package]
-name = "kaspa-ng-core"
+name = "bunker-ng-core"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Core framework for Kaspa NG"
+description = "Core framework for BunkerNet NG"
 build = "build.rs"
 
 [lib]
@@ -18,26 +18,25 @@ mobile = ["lean"]
 lean = []
 cli = []
 default = []
-# default = ["browser-extension"]
 
 [build-dependencies]
 vergen = { version = "8.2.6", features = ["build", "git", "gitcl", "rustc", "cargo"] }
 
 [dependencies]
-kaspa-addresses.workspace = true
-kaspa-bip32.workspace = true
-kaspa-cli.workspace = true
-kaspa-consensus-core.workspace = true
-kaspa-core.workspace = true
-kaspa-metrics-core.workspace = true
-kaspa-ng-macros.workspace = true
-kaspa-notify.workspace = true
-kaspa-rpc-core.workspace = true
-kaspa-utils.workspace = true
-kaspa-wallet-core.workspace = true
-kaspa-wallet-keys.workspace = true
-kaspa-wrpc-client.workspace = true
-kaspa-txscript.workspace = true
+bunkernet-addresses.workspace = true
+bunkernet-bip32.workspace = true
+bunkernet-cli.workspace = true
+bunkernet-consensus-core.workspace = true
+bunkernet-core.workspace = true
+bunkernet-metrics-core.workspace = true
+bunker-ng-macros.workspace = true
+bunkernet-notify.workspace = true
+bunkernet-rpc-core.workspace = true
+bunkernet-utils.workspace = true
+bunkernet-wallet-core.workspace = true
+bunkernet-wallet-keys.workspace = true
+bunkernet-wrpc-client.workspace = true
+bunkernet-txscript.workspace = true
 
 workflow-core.workspace = true
 workflow-i18n.workspace = true
@@ -87,7 +86,6 @@ egui_extras.workspace = true
 chrono.workspace = true
 
 egui-phosphor = { workspace = true, features = ["light"] }
-# egui-phosphor = { workspace = true, features = ["thin","light","regular","bold"] }
 egui-notify.workspace = true
 
 [dependencies.web-sys]
@@ -108,10 +106,10 @@ nix.workspace = true
 clap.workspace = true
 ctrlc.workspace = true
 env_logger.workspace = true
-kaspa-core.workspace = true
-kaspa-rpc-service.workspace = true
-kaspa-wrpc-server.workspace = true
-kaspad.workspace = true
+bunkernet-core.workspace = true
+bunkernet-rpc-service.workspace = true
+bunkernet-wrpc-server.workspace = true
+bunkerd.workspace = true
 num_cpus.workspace = true
 open.workspace = true
 rlimit.workspace = true
@@ -134,9 +132,7 @@ eframe = { workspace = true,  default-features = false, features = [
 eframe = { workspace = true, default-features = false, features = [
     "accesskit",     # Make egui comptaible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
-    # "wgpu",          # Use the glow rendering backend. Alternative: "wgpu".
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
     "wayland"
 ] }
-

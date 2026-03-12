@@ -1,7 +1,7 @@
 use crate::imports::*;
 use crate::runtime::services::metrics_monitor::MAX_METRICS_SAMPLES;
 use egui_extras::{StripBuilder, Size};
-use kaspa_metrics_core::{Metric,MetricGroup, MetricsSnapshot};
+use bunkernet_metrics_core::{Metric,MetricGroup, MetricsSnapshot};
 use chrono::DateTime;
 use egui_plot::{
     Legend,
@@ -240,7 +240,7 @@ impl ModuleT for Metrics {
                 ui.label(i18n("Metrics are not currently available"));
                 ui.add_space(32.);
                 
-                if core.settings.node.node_kind != KaspadNodeKind::Disable {
+                if core.settings.node.node_kind != BunkerdNodeKind::Disable {
                     ui.add_space(64.);
                     ui.add(egui::Spinner::new().size(92.));
                 } else {

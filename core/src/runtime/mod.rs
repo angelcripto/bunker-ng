@@ -33,7 +33,7 @@ pub struct Inner {
     // adaptor: Option<Arc<dyn Adaptor>>,
     adaptor: Option<Arc<Adaptor>>,
 
-    kaspa: Arc<KaspaService>,
+    bunkernet: Arc<BunkerNetService>,
     peer_monitor_service: Arc<PeerMonitorService>,
     feerate_monitor_service: Arc<FeerateMonitorService>,
     update_monitor_service: Arc<UpdateMonitorService>,
@@ -45,7 +45,7 @@ pub struct Inner {
     block_dag_monitor_service: Arc<BlockDagMonitorService>,
 }
 
-/// Runtime is a core component of the Kaspa NG application responsible for
+/// Runtime is a core component of the BunkerNet NG application responsible for
 /// running application services and communication between these services
 /// and the application UI.
 #[derive(Clone)]
@@ -67,7 +67,7 @@ impl Runtime {
         let application_events =
             application_events.unwrap_or_else(ApplicationEventsChannel::unbounded);
         let repaint_service = Arc::new(RepaintService::new(application_events.clone(), settings));
-        let kaspa = Arc::new(KaspaService::new(
+        let bunkernet = Arc::new(BunkerNetService::new(
             application_events.clone(),
             settings,
             wallet_api,
@@ -107,7 +107,7 @@ impl Runtime {
 
         let services: Mutex<Vec<Arc<dyn Service>>> = Mutex::new(vec![
             repaint_service.clone(),
-            kaspa.clone(),
+            bunkernet.clone(),
             peer_monitor_service.clone(),
             feerate_monitor_service.clone(),
             market_monitor_service.clone(),
@@ -123,7 +123,7 @@ impl Runtime {
                 services,
                 application_events,
                 repaint_service,
-                kaspa,
+                bunkernet,
                 feerate_monitor_service,
                 peer_monitor_service,
                 market_monitor_service,
@@ -222,7 +222,7 @@ impl Runtime {
 
     /// Returns the reference to the wallet API.
     pub fn wallet(&self) -> Arc<dyn WalletApi> {
-        self.inner.kaspa.wallet()
+        self.inner.bunkernet.wallet()
     }
 
     pub fn repaint_service(&self) -> &Arc<RepaintService> {
@@ -230,8 +230,8 @@ impl Runtime {
     }
 
     /// Returns the reference to the kaspa service.
-    pub fn kaspa_service(&self) -> &Arc<KaspaService> {
-        &self.inner.kaspa
+    pub fn bunkernet_service(&self) -> &Arc<BunkerNetService> {
+        &self.inner.bunkernet
     }
 
     pub fn feerate_monitor_service(&self) -> &Arc<FeerateMonitorService> {
@@ -426,13 +426,13 @@ where
 }
 
 /// Gracefully halt the runtime runtime. This is used
-/// to shutdown kaspad when the kaspa-ng process exit
+/// to shutdown bunkerd when the bunker-ng process exit
 /// is an inevitable eventuality.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn halt() {
     if let Some(runtime) = try_runtime() {
         runtime.try_send(Events::Exit).ok();
-        runtime.kaspa_service().clone().terminate();
+        runtime.bunkernet_service().clone().terminate();
 
         let handle = tokio::spawn(async move { runtime.shutdown().await });
 
@@ -444,7 +444,7 @@ pub fn halt() {
 
 /// Attempt to halt the runtime runtime but exit the process
 /// if it takes too long. This is used in attempt to shutdown
-/// kaspad if the kaspa-ng process panics, which can result
+/// bunkerd if the bunker-ng process panics, which can result
 /// in a still functioning zombie child process on unix systems.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn abort() {

@@ -72,7 +72,7 @@ impl Settings {
                                 
                             });
 
-                            if let Err(err) = KaspaRpcClient::parse_url(settings.wrpc_url.clone(), settings.wrpc_encoding, settings.network.into()) {
+                            if let Err(err) = BunkernetRpcClient::parse_url(settings.wrpc_url.clone(), settings.wrpc_encoding, settings.network.into()) {
                                 ui.label(
                                     RichText::new(err.to_string())
                                         .color(theme_color().warning_color),
@@ -84,7 +84,7 @@ impl Settings {
                     //     if #[cfg(not(target_arch = "wasm32"))] {
                     //         ui.horizontal_wrapped(|ui|{
                     //             ui.label(i18n("Recommended arguments for the remote node: "));
-                    //             ui.label(RichText::new("kaspad --utxoindex --rpclisten-borsh=0.0.0.0").code().font(FontId::monospace(14.0)).color(theme_color().strong_color));
+                    //             ui.label(RichText::new("bunkerd --utxoindex --rpclisten-borsh=0.0.0.0").code().font(FontId::monospace(14.0)).color(theme_color().strong_color));
                     //         });
                     //         ui.horizontal_wrapped(|ui|{
                     //             ui.label(i18n("If you are running locally, use: "));
@@ -170,9 +170,9 @@ impl Settings {
                     .default_open(true)
                     .show(ui, |ui| {
                         ui.horizontal_wrapped(|ui|{
-                            KaspadNodeKind::iter().for_each(|node_kind| {
+                            BunkerdNodeKind::iter().for_each(|node_kind| {
                                 #[cfg(not(target_arch = "wasm32"))] {
-                                    if !core.settings.developer.experimental_features_enabled() && matches!(*node_kind,KaspadNodeKind::IntegratedInProc|KaspadNodeKind::ExternalAsDaemon) {
+                                    if !core.settings.developer.experimental_features_enabled() && matches!(*node_kind,BunkerdNodeKind::IntegratedInProc|BunkerdNodeKind::ExternalAsDaemon) {
                                         return;
                                     }
                                 }
@@ -181,12 +181,12 @@ impl Settings {
                         });
 
                         match self.settings.node.node_kind {
-                            KaspadNodeKind::Remote => {
+                            BunkerdNodeKind::Remote => {
 
                             },
 
                             #[cfg(not(target_arch = "wasm32"))]
-                            KaspadNodeKind::IntegratedInProc => {
+                            BunkerdNodeKind::IntegratedInProc => {
                                 ui.horizontal_wrapped(|ui|{
                                     ui.set_max_width(half_width);
                                     ui.label(i18n("Please note that the integrated mode is experimental and does not currently show the sync progress information."));
@@ -194,17 +194,17 @@ impl Settings {
                             },
 
                             #[cfg(not(target_arch = "wasm32"))]
-                            KaspadNodeKind::ExternalAsDaemon => {
+                            BunkerdNodeKind::ExternalAsDaemon => {
 
                                 ui.horizontal(|ui|{
                                     ui.label(i18n("Rusty Kaspa Daemon Path:"));
-                                    ui.add(TextEdit::singleline(&mut self.settings.node.kaspad_daemon_binary));
+                                    ui.add(TextEdit::singleline(&mut self.settings.node.bunkerd_daemon_binary));
                                 });
 
-                                let path = std::path::PathBuf::from(&self.settings.node.kaspad_daemon_binary);
+                                let path = std::path::PathBuf::from(&self.settings.node.bunkerd_daemon_binary);
                                 if path.exists() && !path.is_file() {
                                     ui.label(
-                                        RichText::new(format!("Rusty Kaspa Daemon not found at '{path}'", path = self.settings.node.kaspad_daemon_binary))
+                                        RichText::new(format!("Rusty Kaspa Daemon not found at '{path}'", path = self.settings.node.bunkerd_daemon_binary))
                                             .color(theme_color().error_color),
                                     );
                                     node_settings_error = Some("Rusty Kaspa Daemon not found");
@@ -233,22 +233,22 @@ impl Settings {
                             CollapsingHeader::new(i18n("Data Storage"))
                                 .default_open(true)
                                 .show(ui, |ui| {
-                                    ui.checkbox(&mut self.settings.node.kaspad_daemon_storage_folder_enable, i18n("Custom data storage folder"));
-                                    if self.settings.node.kaspad_daemon_args.contains("--appdir") && self.settings.node.kaspad_daemon_storage_folder_enable {
+                                    ui.checkbox(&mut self.settings.node.bunkerd_daemon_storage_folder_enable, i18n("Custom data storage folder"));
+                                    if self.settings.node.bunkerd_daemon_args.contains("--appdir") && self.settings.node.bunkerd_daemon_storage_folder_enable {
                                         ui.colored_label(theme_color().warning_color, i18n("Your daemon arguments contain '--appdir' directive, which overrides the data storage folder setting."));
                                         ui.colored_label(theme_color().warning_color, i18n("Please remove the --appdir directive to continue."));
-                                    } else if self.settings.node.kaspad_daemon_storage_folder_enable {
+                                    } else if self.settings.node.bunkerd_daemon_storage_folder_enable {
                                         ui.horizontal(|ui|{
                                             ui.label(i18n("Data Storage Folder:"));
-                                            ui.add(TextEdit::singleline(&mut self.settings.node.kaspad_daemon_storage_folder));
+                                            ui.add(TextEdit::singleline(&mut self.settings.node.bunkerd_daemon_storage_folder));
                                         });
 
-                                        let appdir = self.settings.node.kaspad_daemon_storage_folder.trim();
+                                        let appdir = self.settings.node.bunkerd_daemon_storage_folder.trim();
                                         if appdir.is_empty() {
                                             ui.colored_label(theme_color().error_color, i18n("Data storage folder must not be empty"));
                                         } else if !Path::new(appdir).exists() {
                                             ui.colored_label(theme_color().error_color, i18n("Data storage folder not found at"));
-                                            ui.label(format!("\"{}\"",self.settings.node.kaspad_daemon_storage_folder.trim()));
+                                            ui.label(format!("\"{}\"",self.settings.node.bunkerd_daemon_storage_folder.trim()));
 
                                             ui.add_space(4.);
                                             if ui.medium_button(i18n("Create Data Folder")).clicked() {
@@ -266,17 +266,17 @@ impl Settings {
 
                         #[cfg(not(target_arch = "wasm32"))]
                         if core.settings.developer.custom_daemon_args_enabled() && self.settings.node.node_kind.is_config_capable() {
-                            use kaspad_lib::args::Args;
+                            use bunkerd_lib::args::Args;
                             use clap::error::ErrorKind as ClapErrorKind;
-                            use crate::runtime::services::kaspa::Config;
+                            use crate::runtime::services::bunkernet::Config;
 
                             ui.horizontal(|ui| {
                                 ui.add_space(2.);
-                                ui.checkbox(&mut self.settings.node.kaspad_daemon_args_enable, i18n("Activate custom daemon arguments"));
+                                ui.checkbox(&mut self.settings.node.bunkerd_daemon_args_enable, i18n("Activate custom daemon arguments"));
                             });
 
-                            if self.settings.node.kaspad_daemon_args_enable {
-                                ui.indent("kaspad_daemon_args", |ui| {
+                            if self.settings.node.bunkerd_daemon_args_enable {
+                                ui.indent("bunkerd_daemon_args", |ui| {
                                     ui.vertical(|ui| {
                                         ui.label(i18n("Resulting daemon arguments:"));
                                         ui.add_space(4.);
@@ -290,11 +290,11 @@ impl Settings {
                                         ui.label(i18n("Custom arguments:"));
                                         let width = ui.available_width() * 0.4;
                                         let height = 48.0;
-                                        ui.add_sized(vec2(width,height),TextEdit::multiline(&mut self.settings.node.kaspad_daemon_args).code_editor().font(FontId::monospace(14.0)));
+                                        ui.add_sized(vec2(width,height),TextEdit::multiline(&mut self.settings.node.bunkerd_daemon_args).code_editor().font(FontId::monospace(14.0)));
                                         ui.add_space(4.);
                                     });
 
-                                    let args = format!("kaspad {}",self.settings.node.kaspad_daemon_args.trim());
+                                    let args = format!("bunkerd {}",self.settings.node.bunkerd_daemon_args.trim());
                                     let args = args.trim().split(' ').collect::<Vec<&str>>();
                                     match Args::parse(args.iter()) {
                                         Ok(_) => { },
@@ -335,7 +335,7 @@ impl Settings {
                     self.settings.node.grpc_network_interface = self.grpc_network_interface.as_ref().try_into().unwrap(); //NetworkInterfaceConfig::try_from(&self.grpc_network_interface).unwrap();
                 }
 
-                if self.settings.node.node_kind == KaspadNodeKind::Remote {
+                if self.settings.node.node_kind == BunkerdNodeKind::Remote {
                     node_settings_error = Self::render_remote_settings(core, ui, &mut self.settings.node);
                 }
 
@@ -421,13 +421,13 @@ impl Settings {
 
                                 cfg_if! {
                                     if #[cfg(not(target_arch = "wasm32"))] {
-                                        let storage_root = core.settings.node.kaspad_daemon_storage_folder_enable.then_some(core.settings.node.kaspad_daemon_storage_folder.as_str());
+                                        let storage_root = core.settings.node.bunkerd_daemon_storage_folder_enable.then_some(core.settings.node.bunkerd_daemon_storage_folder.as_str());
                                         core.storage.track_storage_root(storage_root);
                                     }
                                 }
 
                                 if restart {
-                                    self.runtime.kaspa_service().update_services(&self.settings.node, None);
+                                    self.runtime.bunkernet_service().update_services(&self.settings.node, None);
                                 }
                             },
                             Confirm::Nack => {

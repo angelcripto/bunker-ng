@@ -4,23 +4,22 @@ members = [
     "app",
     "core",
     "macros",
-    "extensions/chrome",
 ]
 default-members = ["app"]
 
 [workspace.package]
 rust-version = "1.81.0"
-version = "1.0.3"
-authors = ["ASPECTRON Inc.","Kaspa Developers"]
+version = "1.0.0"
+authors = ["BunkerNet Developers"]
 license = "PROPRIETARY"
 edition = "2021"
-repository = "https://github.com/aspectron/kaspa-ng"
+repository = "https://github.com/aspect/bunker-ng"
 
 [workspace.dependencies]
 
-kaspa-ng = { version = "1.0.0", path = "app/", default-features = false }
-kaspa-ng-core = { version = "1.0.0", path = "core/", default-features = false }
-kaspa-ng-macros = { version = "1.0.0", path = "macros/", default-features = false }
+bunker-ng = { version = "1.0.0", path = "app/", default-features = false }
+bunker-ng-core = { version = "1.0.0", path = "core/", default-features = false }
+bunker-ng-macros = { version = "1.0.0", path = "macros/", default-features = false }
 
 # ___________________
 #  ____ ____ _  _ _ 
@@ -126,23 +125,23 @@ egui-notify = { version = "=0.19.0"}
 # kaspa-txscript = { path = "../rusty-kaspa/crypto/txscript" }
 # kaspad = { path = "../rusty-kaspa/kaspad" }
 
-kaspa-addresses = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-alloc = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-bip32 = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-cli = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-consensus-core = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-core = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-metrics-core = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-notify = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-rpc-core = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-rpc-service = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-utils = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-wallet-core = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-wallet-keys = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-wrpc-client = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-wrpc-server = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspa-txscript = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
-kaspad = { git = "https://github.com/aspectron/rusty-kaspa.git", branch = "sigma" }
+bunkernet-addresses = { path = "../KASPACONTRACTS/crypto/addresses" }
+bunkernet-alloc = { path = "../KASPACONTRACTS/utils/alloc" }
+bunkernet-bip32 = { path = "../KASPACONTRACTS/wallet/bip32" }
+bunkernet-cli = { path = "../KASPACONTRACTS/cli" }
+bunkernet-consensus-core = { path = "../KASPACONTRACTS/consensus/core" }
+bunkernet-core = { path = "../KASPACONTRACTS/core" }
+bunkernet-metrics-core = { path = "../KASPACONTRACTS/metrics/core" }
+bunkernet-notify = { path = "../KASPACONTRACTS/notify" }
+bunkernet-rpc-core = { path = "../KASPACONTRACTS/rpc/core" }
+bunkernet-rpc-service = { path = "../KASPACONTRACTS/rpc/service" }
+bunkernet-utils = { path = "../KASPACONTRACTS/utils" }
+bunkernet-wallet-core = { path = "../KASPACONTRACTS/wallet/core" }
+bunkernet-wallet-keys = { path = "../KASPACONTRACTS/wallet/keys" }
+bunkernet-wrpc-client = { path = "../KASPACONTRACTS/rpc/wrpc/client" }
+bunkernet-wrpc-server = { path = "../KASPACONTRACTS/rpc/wrpc/server" }
+bunkernet-txscript = { path = "../KASPACONTRACTS/crypto/txscript" }
+bunkerd = { path = "../KASPACONTRACTS/bunkerd" }
 
 # kaspa-addresses = { git = "https://github.com/kaspanet/rusty-kaspa.git", branch = "master" }
 # kaspa-alloc = { git = "https://github.com/kaspanet/rusty-kaspa.git", branch = "master" }
