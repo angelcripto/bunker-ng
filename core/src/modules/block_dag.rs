@@ -143,7 +143,8 @@ impl ModuleT for BlockDag {
         } else if !core.state().is_synced() {
             ui.label(RichText::new(i18n("Please wait for the node to sync...")).color(theme_color().warning_color));
         } else {
-            ui.label(i18n("Double click on the graph to re-center..."));
+            let chain_len = self.runtime.block_dag_monitor_service().chain.lock().map(|c| c.len()).unwrap_or(0);
+            ui.label(format!("{} | chain_buckets: {}", i18n("Double click on the graph to re-center..."), chain_len));
         }
     }
 
@@ -295,32 +296,16 @@ impl ModuleT for BlockDag {
 
         let mut reset_plot = false;
         let current_daa_score = core.state().current_daa_score().unwrap_or_default();
-        if self.last_daa_score != current_daa_score {
+        if self.last_daa_score != current_daa_score || !self.running {
 
             if !self.running {
                 self.running = true;
                 reset_plot = true;
-                self.daa_cursor = current_daa_score as f64 - 1.0;
+                self.daa_cursor = current_daa_score as f64;
             }
 
             self.last_daa_score = current_daa_score;
         }
-
-        // let mut reset_plot = false;
-        // let current_daa_score = core.state().current_daa_score().unwrap_or_default();
-        // if self.last_daa_score != current_daa_score || current_daa_score==0 {
-        //    if !self.running || current_daa_score==0{
-        //         if current_daa_score > 0{
-        //             self.running = true;
-        //         }else{
-        //             self.running = false;
-        //         }
-        //         reset_plot = true;
-        //         self.daa_cursor = current_daa_score as f64 - 1.0;
-        //     }
-
-        //     self.last_daa_score = current_daa_score;
-        // }
 
         let delta = 0.025;
         let daa_diff = current_daa_score as f64 - self.daa_cursor;
@@ -382,9 +367,16 @@ impl ModuleT for BlockDag {
         let mut lines_vspc = Vec::new();
 
         let daa_range = self.plot_bounds.max()[0] - self.plot_bounds.min()[0];
-        let daa_margin = daa_range.min(128.0).max(32.0);
-        let daa_min = (self.plot_bounds.min()[0] - daa_margin).max(0.0) as u64;
-        let daa_max = (self.plot_bounds.max()[0] + daa_margin).max(0.0) as u64;
+        let (daa_min, daa_max) = if reset_plot || !(daa_range.is_finite() && daa_range > 0.0) {
+            // On reset or invalid bounds: show ALL blocks so auto_bounds can compute correct range
+            (0u64, u64::MAX)
+        } else {
+            let daa_margin = daa_range.min(128.0).max(32.0);
+            (
+                (self.plot_bounds.min()[0] - daa_margin).max(0.0) as u64,
+                (self.plot_bounds.max()[0] + daa_margin).max(0.0) as u64,
+            )
+        };
         
         let blocks = if let Ok(mut daa_buckets) = self.runtime.block_dag_monitor_service().chain.lock() {
             daa_buckets.iter_mut().filter_map(|(daa_score,bucket)| {
@@ -502,7 +494,16 @@ impl ModuleT for BlockDag {
     }
 
     fn activate(&mut self, core: &mut Core) {
-        let block_dag_monitor_service = crate::runtime::runtime().block_dag_monitor_service().clone();
+        let runtime = crate::runtime::runtime();
+        let block_dag_monitor_service = runtime.block_dag_monitor_service().clone();
+
+        // Inject rpc_api from wallet if the monitor doesn't have it yet
+        if block_dag_monitor_service.rpc_api.lock().unwrap().is_none() {
+            if let Some(core_wallet) = runtime.bunkernet_service().core_wallet() {
+                block_dag_monitor_service.try_inject_rpc(core_wallet.rpc_api());
+            }
+        }
+
         block_dag_monitor_service.enable(core.state().current_daa_score().map(|score|score - 2));
         block_dag_monitor_service.activate(true);
     }

@@ -47,6 +47,16 @@ impl BlockDagMonitorService {
         }
     }
 
+    /// Force-inject rpc_api and register listener if not already registered.
+    /// Called from UI thread via activate() to bypass async event timing issues.
+    pub fn try_inject_rpc(&self, rpc_api: Arc<dyn RpcApi>) {
+        let mut api = self.rpc_api.lock().unwrap();
+        if api.is_none() {
+            *api = Some(rpc_api);
+        }
+        self.is_connected.store(true, Ordering::Relaxed);
+    }
+
     pub async fn register_notification_listener(&self) -> Result<()> {
         if let Some(rpc_api) = self.rpc_api() {
             let listener_id = rpc_api.register_new_listener(ChannelConnection::new(
@@ -285,8 +295,9 @@ impl Service for BlockDagMonitorService {
                     if let Ok(event) = msg {
                         match event {
                             BlockDagMonitorEvents::Enable => {
-                                if !self.is_enabled.load(Ordering::Relaxed) {
-                                    self.is_enabled.store(true, Ordering::Relaxed);
+                                self.is_enabled.store(true, Ordering::Relaxed);
+                                // Always try to register listener (idempotent check via listener_id)
+                                if self.listener_id.lock().unwrap().is_none() {
                                     if self.rpc_api().is_some() && self.is_connected.load(Ordering::SeqCst) {
                                         self.register_notification_listener().await.unwrap();
                                     }
