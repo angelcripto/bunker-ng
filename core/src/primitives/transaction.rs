@@ -640,10 +640,10 @@ pub fn padded_sompi_to_bunkernet_string(sompi: u64, padding: usize) -> String {
 
 pub fn bunkernet_suffix(network_type: &NetworkType) -> &'static str {
     match network_type {
-        NetworkType::Mainnet => "KAS",
-        NetworkType::Testnet => "TKAS",
-        NetworkType::Simnet => "SKAS",
-        NetworkType::Devnet => "DKAS",
+        NetworkType::Mainnet => "BNK",
+        NetworkType::Testnet => "TBNK",
+        NetworkType::Simnet => "SBNK",
+        NetworkType::Devnet => "DBNK",
     }
 }
 

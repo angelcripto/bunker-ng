@@ -198,7 +198,7 @@ pub fn format_currency_with_symbol(price: f64, precision: usize, symbol: &str) -
 
 pub fn precision_from_symbol(symbol: &str) -> usize {
     match symbol {
-        "kas" => 8,
+        "bnk" => 8,
         "btc" => 8,
         // "usd" => 2,
         _ => 6,
